@@ -6,7 +6,7 @@ torch
 torchvision
 opencv-python
 Pillow
-google-generativeai
+google-genai
 SpeechRecognition
 gTTS
 pydub
