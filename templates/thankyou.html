@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scan Results | Krishi AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+body { font-family: 'Inter', sans-serif; background: #faf9f8; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+.glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(229,226,222,0.5); }
+.section-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }
+@keyframes bar { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
+.wave-bar { animation: bar 1s ease-in-out infinite; transform-origin: bottom; }
+.wave-bar:nth-child(2){animation-delay:.15s}
+.wave-bar:nth-child(3){animation-delay:.3s}
+.wave-bar:nth-child(4){animation-delay:.45s}
+.wave-bar:nth-child(5){animation-delay:.6s}
+</style>
+</head>
+<body class="min-h-screen flex flex-col" style="background:#faf9f8">
+
+<!-- Nav -->
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
+  <nav class="grid grid-cols-3 items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <div class="hidden md:flex gap-8 items-center justify-center">
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('history_page') }}">History</a>
+    </div>
+    <div class="flex justify-end items-center gap-3">
+      {% if user_name %}<span class="hidden md:block text-sm text-emerald-700 font-medium">👋 {{ user_name }}</span>{% endif %}
+      <a href="{{ url_for('logout') }}" class="hidden md:block text-xs text-stone-400 hover:text-red-500 transition-colors font-medium">Logout</a>
+    </div>
+  </nav>
+</header>
+
+<!-- Main -->
+<main class="flex-grow pt-24 pb-20 px-4 md:px-6">
+<div class="max-w-5xl mx-auto">
+
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 relative" style="background:rgba(0,108,73,0.1);color:#006c49">
+      <span class="material-symbols-outlined text-5xl">check_circle</span>
+    </div>
+    <h1 class="text-3xl font-bold text-stone-900 mb-2">Analysis Complete!</h1>
+    <p class="inline-block bg-emerald-50 text-emerald-700 px-5 py-2 rounded-full border border-emerald-100 text-sm font-medium">Smart Farming, Smarter Future</p>
+  </div>
+
+  {% if scan %}
+
+  <!-- Top Card -->
+  <div class="glass rounded-2xl overflow-hidden shadow-lg mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2">
+
+      <!-- Left: Diagnosis -->
+      <div class="p-6 border-b md:border-b-0 md:border-r border-stone-200">
+        <p class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Primary Diagnosis</p>
+
+        <h2 class="text-2xl font-bold text-stone-900 mb-3 flex flex-wrap items-center gap-2">
+          {% if scan.cure and scan.cure.disease_name %}{{ scan.cure.disease_name }}{% else %}{{ scan.disease }}{% endif %}
+
+          {% if scan.is_healthy %}
+            <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-200">✅ HEALTHY</span>
+          {% else %}
+            <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200">⚠ ACTION REQUIRED</span>
+          {% endif %}
+
+          {% if scan.cure and scan.cure.severity %}
+            {% set sev = (scan.cure.severity or '') | lower %}
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full border
+              {% if 'high' in sev %}bg-red-50 text-red-600 border-red-200
+              {% elif 'medium' in sev or 'moderate' in sev %}bg-amber-50 text-amber-600 border-amber-200
+              {% else %}bg-green-50 text-green-600 border-green-200{% endif %}">
+              {{ scan.cure.severity }}
+            </span>
+          {% endif %}
+        </h2>
+
+        <!-- Confidence bar -->
+        {% set conf_pct = (scan.confidence or 0) | float * 100 %}
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-semibold text-stone-500">Confidence Score</span>
+            <span class="text-sm font-bold
+              {% if conf_pct >= 80 %}text-emerald-600
+              {% elif conf_pct >= 50 %}text-amber-600
+              {% else %}text-red-600{% endif %}">
+              {{ "%.1f"|format(conf_pct) }}%
+            </span>
+          </div>
+          <div class="w-full bg-stone-100 rounded-full h-3">
+            <div class="h-3 rounded-full transition-all duration-700
+              {% if conf_pct >= 80 %}bg-emerald-500
+              {% elif conf_pct >= 50 %}bg-amber-500
+              {% else %}bg-red-500{% endif %}"
+              style="width:{{ conf_pct }}%"></div>
+          </div>
+          <p class="text-xs mt-1
+            {% if conf_pct >= 80 %}text-emerald-600
+            {% elif conf_pct >= 50 %}text-amber-600
+            {% else %}text-red-600{% endif %}">
+            {% if conf_pct >= 80 %}High confidence detection
+            {% elif conf_pct >= 50 %}Moderate confidence — consider re-scanning
+            {% else %}Low confidence — please upload a clearer image{% endif %}
+          </p>
+        </div>
+
+        <!-- Meta -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-stone-50 rounded-xl p-3">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-0.5">Model Used</p>
+            <p class="text-sm font-medium text-stone-800">{{ (scan.model_used or 'AI') | capitalize }} CNN</p>
+          </div>
+          <div class="bg-stone-50 rounded-xl p-3">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-0.5">Language</p>
+            <p class="text-sm font-medium text-stone-800">{{ scan.language or 'English' }}</p>
+          </div>
+          {% if scan.cure and scan.cure.scientific_name and scan.cure.scientific_name != 'null' %}
+          <div class="col-span-2 bg-stone-50 rounded-xl p-3">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-0.5">Scientific Name</p>
+            <p class="text-sm italic text-stone-800">{{ scan.cure.scientific_name }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right: Description + Tips -->
+      <div class="p-6">
+        {% if scan.cure and scan.cure.description %}
+        <div class="mb-4">
+          <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">About This Disease</p>
+          <p class="text-sm text-stone-600 leading-relaxed">{{ scan.cure.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if scan.cure %}
+          <div class="mt-4 bg-emerald-50/30 p-4 rounded-xl border border-emerald-200">
+            {% if scan.cure.treatment_summary %}
+              <p class="text-sm font-medium text-stone-800"><strong>Treatment:</strong> {{ scan.cure.treatment_summary }}</p>
+            {% endif %}
+            {% if scan.cure.prevention_summary %}
+              <p class="text-sm font-medium text-stone-800 mt-2"><strong>Prevention:</strong> {{ scan.cure.prevention_summary }}</p>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if scan.cure and scan.cure.symptoms %}
+        <div class="mb-4">
+          <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">⚠ Visible Symptoms</p>
+          <ul class="space-y-1">
+            {% for symptom in scan.cure.symptoms %}
+            <li class="flex gap-2 text-xs text-stone-600">
+              <span class="text-amber-500 flex-shrink-0">•</span>
+              <span>{{ symptom }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if scan.cure and scan.cure.emergency_tip %}
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+          <p class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">🚨 Emergency Tip — Do This TODAY</p>
+          <p class="text-sm text-amber-800 font-medium leading-relaxed">{{ scan.cure.emergency_tip }}</p>
+        </div>
+        {% endif %}
+
+        <!-- TTS Controls -->
+        <div class="flex flex-wrap items-center gap-2 mt-4">
+          <button onclick="speakFullReport()" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all">
+            <span class="material-symbols-outlined text-base">volume_up</span> Read Aloud
+          </button>
+          <button onclick="stopAudio()" class="flex items-center gap-2 bg-stone-100 text-stone-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-stone-200 transition-all">
+            <span class="material-symbols-outlined text-base">stop</span> Stop
+          </button>
+          <button id="shareBtn" onclick="shareResults()" class="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-100 transition-all">
+            <span class="material-symbols-outlined text-base">share</span> Share Results
+          </button>
+          <!-- Speaking waveform -->
+          <div id="speakWave" class="hidden items-end gap-0.5 h-5">
+            <div class="wave-bar w-1 bg-emerald-500 rounded-full" style="height:6px"></div>
+            <div class="wave-bar w-1 bg-emerald-500 rounded-full" style="height:12px"></div>
+            <div class="wave-bar w-1 bg-emerald-500 rounded-full" style="height:18px"></div>
+            <div class="wave-bar w-1 bg-emerald-500 rounded-full" style="height:12px"></div>
+            <div class="wave-bar w-1 bg-emerald-500 rounded-full" style="height:6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Treatment Steps -->
+  {% if scan.cure and scan.cure.treatment_steps %}
+  <div class="section-card">
+    <h3 class="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-emerald-600">healing</span>
+      Detailed Treatment Steps
+      <span class="ml-auto text-xs font-normal text-stone-400 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">{{ scan.cure.treatment_steps | length }} steps</span>
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for step in scan.cure.treatment_steps %}
+      {% set step_title = step.title if step is mapping else step %}
+      {% set step_detail = step.detail if step is mapping else '' %}
+      {% set speak_text = (step_title ~ '. ' ~ step_detail) if step_detail else step_title %}
+      <div class="flex gap-3 p-4 bg-emerald-50/20 rounded-xl border border-emerald-100 flex-col md:flex-row items-start">
+        <span class="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">{{ loop.index }}</span>
+        <div class="flex-1 min-w-0">
+          <h4 class="text-sm font-bold text-stone-950 mb-1">{{ step_title }}</h4>
+          {% if step_detail %}
+          <p class="text-xs text-stone-600 leading-relaxed">{{ step_detail }}</p>
+          {% endif %}
+        </div>
+        <button onclick="speakOne({{ speak_text | tojson | forceescape }})" class="flex-shrink-0 w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center hover:bg-emerald-200 mt-1" title="Speak">
+          <span class="material-symbols-outlined text-xs">volume_up</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Prevention Tips -->
+  {% if scan.cure and scan.cure.prevention %}
+  <div class="section-card">
+    <h3 class="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-600">shield</span>
+      Prevention Tips
+      <span class="ml-auto text-xs font-normal text-stone-400 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">{{ scan.cure.prevention | length }} tips</span>
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {% for tip in scan.cure.prevention %}
+      <div class="flex gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+        <span class="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">{{ loop.index }}</span>
+        <p class="text-sm text-stone-700 leading-relaxed flex-1">{{ tip }}</p>
+        <button onclick="speakOne({{ tip | tojson | forceescape }})" class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center hover:bg-blue-200" title="Speak">
+          <span class="material-symbols-outlined text-xs">volume_up</span>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Pesticides -->
+  {% if scan.cure and scan.cure.recommended_pesticides %}
+  <div class="section-card">
+    <h3 class="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-orange-600">science</span>
+      Recommended Pesticides & Treatments
+      <span class="ml-auto text-xs font-normal text-stone-400 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">{{ scan.cure.recommended_pesticides | length }} products</span>
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for p in scan.cure.recommended_pesticides %}
+      <div class="bg-white rounded-xl p-4 border border-stone-200 shadow-sm">
+        {% if p is mapping %}
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-sm font-bold text-stone-900">{{ p.name }}</p>
+            <span class="text-xs font-bold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{{ p.type }}</span>
+          </div>
+          <div class="space-y-1 text-xs text-stone-500">
+            <div>📏 <strong>Dosage:</strong> {{ p.dosage }}</div>
+            <div>🔧 <strong>Application:</strong> {{ p.application_method }}</div>
+            {% if p.safety_note %}<div class="bg-amber-50 text-amber-700 rounded-lg p-2 border border-amber-100 mt-1">⚠️ {{ p.safety_note }}</div>{% endif %}
+            {% if p.description %}<div class="text-stone-600 mt-2 leading-relaxed"><strong>Description:</strong> {{ p.description }}</div>{% endif %}
+          </div>
+        {% else %}
+          <p class="text-sm text-stone-600">{{ p }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Organic Alternatives -->
+  {% if scan.cure and scan.cure.organic_alternatives %}
+  <div class="section-card">
+    <h3 class="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-green-600">eco</span>
+      Organic & Bio Alternatives
+      <span class="ml-auto text-xs font-normal text-stone-400 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">{{ scan.cure.organic_alternatives | length }} options</span>
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {% for alt in scan.cure.organic_alternatives %}
+      <div class="flex gap-3 p-4 bg-green-50/50 rounded-xl border border-green-100">
+        <span class="text-green-600 text-xl flex-shrink-0">🌱</span>
+        <div class="text-sm text-stone-700 leading-relaxed">
+          {% if ':' in alt %}
+            {% set parts = alt.split(':', 1) %}
+            <strong>{{ parts[0] }}:</strong>{{ parts[1] }}
+          {% else %}
+            {{ alt }}
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- No scan data -->
+  <div class="glass rounded-2xl p-12 text-center mb-6">
+    <span class="material-symbols-outlined text-5xl text-stone-300 block mb-4">image_not_supported</span>
+    <p class="text-stone-500 mb-4">No scan result found. Please upload a leaf image first.</p>
+    <a href="{{ url_for('scanner_page') }}">
+      <button class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700">Go to Scanner</button>
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Action Buttons -->
+  <div class="flex flex-wrap items-center justify-center gap-4 mt-6">
+    <a href="{{ url_for('scanner_page') }}">
+      <button class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg hover:bg-emerald-700 active:scale-95 transition-all">
+        <span class="material-symbols-outlined">photo_camera</span> Scan More Plants
+      </button>
+    </a>
+    <a href="{{ url_for('history_page') }}">
+      <button class="px-6 py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-100 transition-all">
+        <span class="material-symbols-outlined">history</span> View History
+      </button>
+    </a>
+    <a href="{{ url_for('signup_page') }}">
+      <button class="px-6 py-3 bg-white border-2 border-stone-200 text-stone-700 rounded-xl font-bold flex items-center gap-2 hover:bg-stone-50 transition-all">
+        <span class="material-symbols-outlined">home</span> Back to Home
+      </button>
+    </a>
+  </div>
+
+</div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full py-8 bg-stone-50 border-t border-stone-200">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-8 max-w-7xl mx-auto">
+    <span class="text-base font-bold text-emerald-800">Krishi AI</span>
+    <p class="text-xs text-stone-400">© 2026 Krishi AI. Precision Agriculture Intelligence.</p>
+    <div class="flex gap-6">
+      <a class="text-xs text-stone-500 hover:text-emerald-600" href="#">Privacy</a>
+      <a class="text-xs text-stone-500 hover:text-emerald-600" href="#">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<!-- TTS Script -->
+<script>
+// Language map
+const LANG_MAP = {
+  'English':'en','Hindi':'hi','Marathi':'mr','Kannada':'kn',
+  'Telugu':'te','Tamil':'ta','Gujarati':'gu','Bengali':'bn',
+  'Punjabi':'pa','Odia':'or','Malayalam':'ml','French':'fr'
+};
+
+const scanLang  = "{{ scan.language if scan else 'English' }}";
+const ttsLang   = LANG_MAP[scanLang.split('(')[0].trim()] || 'en';
+let   curAudio  = null;
+
+function stopAudio() {
+  if (curAudio) { curAudio.pause(); curAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  document.getElementById('speakWave').classList.add('hidden');
+  document.getElementById('speakWave').classList.remove('flex');
+}
+
+function speakOne(text) {
+  if (!text || text.trim() === '') return;
+  doSpeak(text, ttsLang);
+}
+
+function speakFullReport() {
+  const parts = [];
+  {% if scan %}
+  parts.push("Diagnosis: " + {{ (scan.cure.disease_name if scan.cure and scan.cure.disease_name else scan.disease) | tojson }} + ".");
+  parts.push("Confidence: " + {{ '%.0f'|format((scan.confidence or 0)|float * 100) | tojson }} + " percent.");
+  {% if scan.cure and scan.cure.description %}
+  parts.push({{ scan.cure.description | truncate(200) | tojson }});
+  {% endif %}
+  {% if scan.cure and scan.cure.treatment_summary %}
+  parts.push("Treatment summary: " + {{ scan.cure.treatment_summary | tojson }} + ".");
+  {% endif %}
+  {% if scan.cure and scan.cure.prevention_summary %}
+  parts.push("Prevention summary: " + {{ scan.cure.prevention_summary | tojson }} + ".");
+  {% endif %}
+  {% endif %}
+  doSpeak(parts.join(' '), ttsLang);
+}
+
+function doSpeak(text, lang) {
+  stopAudio();
+  document.getElementById('speakWave').classList.remove('hidden');
+  document.getElementById('speakWave').classList.add('flex');
+
+  // Try gTTS server first
+  fetch('/api/voice/speak', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, language: lang })
+  })
+  .then(r => { if (!r.ok) throw new Error('gTTS failed'); return r.blob(); })
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    curAudio = new Audio(url);
+    curAudio.onended = () => { stopAudio(); URL.revokeObjectURL(url); };
+    curAudio.onerror = () => { stopAudio(); browserSpeak(text, lang); };
+    curAudio.play().catch(() => { stopAudio(); browserSpeak(text, lang); });
+  })
+  .catch(() => browserSpeak(text, lang));
+}
+
+function browserSpeak(text, lang) {
+  if (!window.speechSynthesis) return;
+  const BCP = { 'en':'en-IN','hi':'hi-IN','mr':'mr-IN','kn':'kn-IN','te':'te-IN','ta':'ta-IN','gu':'gu-IN','bn':'bn-IN','pa':'pa-IN','or':'or-IN','ml':'ml-IN','fr':'fr-FR' };
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang  = BCP[lang] || 'en-IN';
+  utt.rate  = 0.88;
+  const voices = window.speechSynthesis.getVoices();
+  const match  = voices.find(v => v.lang.startsWith(lang)) || voices.find(v => v.lang.startsWith('en'));
+  if (match) utt.voice = match;
+  utt.onend = () => stopAudio();
+  window.speechSynthesis.speak(utt);
+}
+
+function shareResults() {
+  const lines = [
+    '🌿 Krishi AI — Plant Disease Report',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    'Disease: ' + {{ (scan.cure.disease_name if scan.cure and scan.cure.disease_name else scan.disease) | tojson if scan else "'N/A'" }},
+    'Confidence: ' + {{ ("%.0f"|format((scan.confidence or 0)|float * 100)) | tojson if scan else "'0'" }} + '%',
+    'Language: ' + {{ (scan.language) | tojson if scan else "'English'" }},
+    {% if scan and scan.cure and scan.cure.treatment_summary %}
+    'Treatment: ' + {{ scan.cure.treatment_summary | tojson }},
+    {% endif %}
+    {% if scan and scan.cure and scan.cure.prevention_summary %}
+    'Prevention: ' + {{ scan.cure.prevention_summary | tojson }},
+    {% endif %}
+    {% if scan and scan.cure and scan.cure.emergency_tip %}
+    'Emergency: ' + {{ scan.cure.emergency_tip | tojson }},
+    {% endif %}
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    'Generated by Krishi AI — Smart Farming, Smarter Future'
+  ];
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(() => {
+      const btn = document.getElementById('shareBtn');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.innerHTML = '<span class="material-symbols-outlined text-base">share</span> Share Results', 2000);
+    })
+    .catch(() => alert('Could not copy. Please copy manually.'));
+}
+
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scan History | Krishi AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #faf9f8; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
+  <nav class="grid grid-cols-3 items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <div class="hidden md:flex gap-8 items-center justify-center">
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 pb-0.5" href="{{ url_for('history_page') }}">History</a>
+    </div>
+    <div class="flex justify-end items-center gap-3">
+      {% if user_name %}<span class="hidden md:block text-sm text-emerald-700 font-medium">👋 {{ user_name }}</span>{% endif %}
+      <a href="{{ url_for('logout') }}" class="hidden md:block text-xs text-stone-400 hover:text-red-500 transition-colors font-medium">Logout</a>
+    </div>
+  </nav>
+</header>
+
+<main class="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-6xl mx-auto w-full">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-stone-900 flex items-center gap-3">
+      <span class="material-symbols-outlined text-emerald-600 text-4xl">history</span>
+      Scan History
+    </h1>
+    <p class="text-stone-500 mt-1">Your past plant disease detections</p>
+  </div>
+
+  {% if scans %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for scan in scans %}
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+
+      <!-- Color bar based on health -->
+      <div class="h-1.5 {% if scan.is_healthy %}bg-emerald-500{% else %}bg-red-500{% endif %}"></div>
+
+      <div class="p-5">
+        <!-- Disease name + badge -->
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <h3 class="text-base font-bold text-stone-900 leading-tight">
+            {{ scan.disease or 'Unknown Disease' }}
+          </h3>
+          {% if scan.is_healthy %}
+            <span class="flex-shrink-0 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+              HEALTHY
+            </span>
+          {% else %}
+            <span class="flex-shrink-0 bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200">
+              DISEASED
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- Confidence bar -->
+        <div class="mb-3">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-stone-500">Confidence</span>
+            <span class="text-xs font-bold {% if scan.conf_pct >= 80 %}text-emerald-600{% elif scan.conf_pct >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">
+              {{ scan.conf_pct }}%
+            </span>
+          </div>
+          <div class="w-full bg-stone-100 rounded-full h-2">
+            <div class="h-2 rounded-full {% if scan.conf_pct >= 80 %}bg-emerald-500{% elif scan.conf_pct >= 50 %}bg-amber-500{% else %}bg-red-500{% endif %}"
+              style="width:{{ scan.conf_pct }}%"></div>
+          </div>
+        </div>
+
+        <!-- Meta -->
+        <div class="flex items-center justify-between text-xs text-stone-400 mb-4">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">calendar_today</span>
+            {{ scan.timestamp_str or 'Unknown date' }}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">language</span>
+            {{ scan.language or 'English' }}
+          </span>
+        </div>
+
+        <!-- Cure preview -->
+        {% if scan.cure and scan.cure.emergency_tip %}
+        <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
+          <p class="text-xs text-amber-700 font-medium leading-relaxed">
+            🚨 {{ scan.cure.emergency_tip[:120] }}{% if scan.cure.emergency_tip|length > 120 %}...{% endif %}
+          </p>
+        </div>
+        {% endif %}
+
+        <!-- View details button — re-loads this scan into session -->
+        <form action="{{ url_for('view_history_scan') }}" method="POST">
+          <input type="hidden" name="scan_id" value="{{ scan._id }}"/>
+          <button type="submit"
+            class="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-800 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm">open_in_new</span>
+            View Full Report
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="text-center py-20">
+    <div class="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+      <span class="material-symbols-outlined text-5xl text-emerald-300">history</span>
+    </div>
+    <h2 class="text-xl font-bold text-stone-700 mb-2">No scans yet</h2>
+    <p class="text-stone-500 mb-8">Upload a leaf photo to get your first plant disease analysis.</p>
+    <a href="{{ url_for('scanner_page') }}">
+      <button class="bg-emerald-700 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-emerald-800 transition-all shadow-lg flex items-center gap-2 mx-auto">
+        <span class="material-symbols-outlined">photo_camera</span> Start Scanning
+      </button>
+    </a>
+  </div>
+  {% endif %}
+
+</main>
+
+<footer class="w-full py-6 px-6 bg-stone-50 border-t border-stone-200">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-3 max-w-7xl mx-auto">
+    <span class="text-sm font-bold text-emerald-800">Krishi AI</span>
+    <p class="text-xs text-stone-400">© 2026 Krishi AI. Precision Agriculture Intelligence.</p>
+  </div>
+</footer>
+
+<!-- Mobile Nav -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-white/95 backdrop-blur-md border-t border-stone-100 shadow-lg">
+  <div class="flex justify-around items-center px-2 py-3">
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('signup_page') }}">
+      <span class="material-symbols-outlined text-2xl">home</span><span class="text-[9px] font-bold uppercase mt-1">Home</span>
+    </a>
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('how_it_works') }}">
+      <span class="material-symbols-outlined text-2xl">account_tree</span><span class="text-[9px] font-bold uppercase mt-1">Process</span>
+    </a>
+    <a class="flex flex-col items-center bg-emerald-50 text-emerald-700 rounded-2xl px-4 py-2" href="{{ url_for('scanner_page') }}">
+      <span class="material-symbols-outlined text-2xl">center_focus_strong</span>
+    </a>
+    <a class="flex flex-col items-center text-emerald-700" href="{{ url_for('history_page') }}">
+      <span class="material-symbols-outlined text-2xl">history</span><span class="text-[9px] font-bold uppercase mt-1">History</span>
+    </a>
+  </div>
+</nav>
+
+<script type="text/javascript">
+function changeLanguage(lang) {
+    fetch('/api/set-language', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({language: lang})
+    }).then(() => window.location.reload());
+}
+
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'hi,mr,kn,te,ta,gu,bn,pa,or,ml',
+    autoDisplay: false
+  }, 'google_translate_element');
+  
+  // Auto-trigger translation if not English
+  const targetLang = "{{ session.get('user_language', 'English') }}";
+  const LANG_CODES = {'English':'en','Hindi':'hi','Marathi':'mr','Kannada':'kn','Telugu':'te','Tamil':'ta','Gujarati':'gu','Bengali':'bn','Punjabi':'pa','Odia':'or'};
+  const code = LANG_CODES[targetLang];
+  
+  if (code && code !== 'en') {
+    setTimeout(() => {
+        const select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = code;
+            select.dispatchEvent(new Event('change'));
+        }
+    }, 1000);
+  }
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<div id="google_translate_element" style="display:none"></div>
+
+</body>
+</html>

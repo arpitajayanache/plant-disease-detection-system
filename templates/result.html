@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scan Results | Krishi AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={theme:{extend:{colors:{"primary":"#006c49","on-primary":"#ffffff","primary-container":"#10b981","on-primary-container":"#00422b","secondary-container":"#82f5c1","surface":"#faf9f8","on-surface":"#1a1c1c","surface-container-low":"#f4f3f2","surface-container-highest":"#e3e2e1","on-surface-variant":"#3c4a42","outline-variant":"#bbcabf","outline":"#6c7a71","background":"#faf9f8","on-background":"#1a1c1c","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a"}}}}
+</script>
+<style>
+  body{font-family:'Inter',sans-serif;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .glass{background:rgba(255,255,255,0.75);backdrop-filter:blur(12px);border:1px solid rgba(229,226,222,0.5);}
+  .organic-bg{background-color:#faf9f8;background-image:radial-gradient(at 0% 0%,rgba(16,185,129,0.05) 0px,transparent 50%),radial-gradient(at 100% 100%,rgba(5,150,105,0.05) 0px,transparent 50%);}
+  .section-card{background:#fff;border:1px solid #e5e7eb;border-radius:1rem;padding:1.5rem;margin-bottom:1rem;}
+  @keyframes bar{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}
+  .wave-bar{animation:bar 1s ease-in-out infinite;transform-origin:bottom;}
+</style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col organic-bg">
+
+<!-- Nav -->
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
+  <nav class="grid grid-cols-3 items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <div class="hidden md:flex gap-8 items-center justify-center">
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('history_page') }}">History</a>
+    </div>
+    <div class="flex justify-end items-center gap-3">
+      {% if user_name %}<span class="hidden md:block text-sm text-emerald-700 font-medium">👋 {{ user_name }}</span>{% endif %}
+      <a href="{{ url_for('logout') }}" class="hidden md:block text-xs text-stone-400 hover:text-red-500 transition-colors font-medium">Logout</a>
+    </div>
+  </nav>
+</header>
+
+<main class="flex-grow pt-24 pb-20 px-4 md:px-6">
+<div class="max-w-5xl mx-auto">
+
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-on-surface mb-2">Analysis Complete!</h1>
+    <p class="inline-block bg-emerald-50 text-emerald-700 px-5 py-2 rounded-full border border-emerald-100 text-sm font-medium">
+      Smart Farming, Smarter Future
+    </p>
+  </div>
+
+  {% if scan %}
+  <div class="glass rounded-2xl overflow-hidden shadow-lg mb-6 p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <p class="text-xs font-bold text-outline uppercase tracking-widest mb-1">Diagnosis</p>
+        <h2 class="text-2xl font-bold text-on-surface mb-3">{{ scan.disease }}</h2>
+        <div class="flex items-center gap-2 mb-4">
+            <span class="text-sm font-bold text-emerald-600">{{ "%.1f"|format(scan.confidence * 100) }}% Confidence</span>
+        </div>
+        <p class="text-sm text-on-surface-variant leading-relaxed">{{ scan.cure.description }}</p>
+      </div>
+      <div class="bg-surface-container-low rounded-2xl p-4">
+        <h3 class="text-sm font-bold mb-3">Quick Actions</h3>
+        <button onclick="speakReport()" class="w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-bold mb-2">Read Aloud</button>
+        <button onclick="stopAudio()" class="w-full bg-stone-100 text-stone-600 py-2 rounded-xl text-sm font-bold">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Treatment -->
+  <div class="section-card">
+    <h3 class="text-base font-bold mb-4">Treatment Steps</h3>
+    <ul class="space-y-3">
+      {% for step in scan.cure.treatment_steps %}
+      {% set step_title = step.title if step is mapping else step %}
+      {% set step_detail = step.detail if step is mapping else '' %}
+      <li class="flex flex-col gap-1 text-sm bg-emerald-50/20 p-3 rounded-xl border border-emerald-100/50">
+        <div class="flex gap-2 font-bold text-primary">
+          <span>{{ loop.index }}.</span>
+          <span>{{ step_title }}</span>
+        </div>
+        {% if step_detail %}
+        <p class="text-xs text-stone-600 ml-5 leading-relaxed">{{ step_detail }}</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Doctor's Advice -->
+  <div class="section-card border-l-4 border-l-primary">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-primary">clinical_notes</span>
+        <h3 class="text-base font-bold">Plant Doctor's Verdict</h3>
+    </div>
+    <p class="text-sm text-stone-700 italic bg-stone-50 p-4 rounded-xl border border-stone-100">
+        "{{ scan.cure.doctor_visit or 'No expert visit required at this stage. Monitor the plant daily.' }}"
+    </p>
+  </div>
+
+  <div class="flex flex-col md:flex-row justify-center gap-4 mt-10">
+    <a href="/conclusion" class="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-xl hover:opacity-95 transition-all text-center flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined">check_circle</span> Complete Scan
+    </a>
+    <a href="/scanner" class="px-8 py-4 bg-white border-2 border-emerald-100 text-emerald-700 rounded-2xl font-bold hover:bg-emerald-50 transition-all text-center">
+      Scan Another
+    </a>
+  </div>
+
+</div>
+</main>
+
+<script>
+const reportText = `
+    Disease: {{ scan.disease }}.
+    Description: {{ scan.cure.description }}.
+    Treatment: {{ scan.cure.treatment_summary or '' }}.
+    Prevention: {{ scan.cure.prevention_summary or '' }}.
+    Emergency Tip: {{ scan.cure.emergency_tip or '' }}.
+`;
+const userLang = "{{ scan.language or session.get('user_language', 'English') }}";
+const LANG_MAP = {
+    'English':'en','Hindi':'hi','Marathi':'mr','Kannada':'kn',
+    'Telugu':'te','Tamil':'ta','Gujarati':'gu','Bengali':'bn',
+    'Punjabi':'pa','Odia':'or','Malayalam':'ml'
+};
+
+function speakReport() {
+    const code = LANG_MAP[userLang] || 'en';
+    fetch('/api/voice/speak', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: reportText, language: code})
+    })
+    .then(r => r.blob())
+    .then(blob => {
+        window.currentAudio = new Audio(URL.createObjectURL(blob));
+        window.currentAudio.play();
+    });
+}
+
+function stopAudio() {
+    if(window.currentAudio) window.currentAudio.pause();
+}
+</script>
+
+<!-- Mobile Nav -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-white/95 backdrop-blur-md border-t border-stone-100 shadow-lg">
+  <div class="flex justify-around items-center px-2 py-3">
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('signup_page') }}">
+      <span class="material-symbols-outlined text-2xl">home</span><span class="text-[9px] font-bold uppercase mt-1">Home</span>
+    </a>
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('how_it_works') }}">
+      <span class="material-symbols-outlined text-2xl">account_tree</span><span class="text-[9px] font-bold uppercase mt-1">Process</span>
+    </a>
+    <a class="flex flex-col items-center bg-emerald-50 text-emerald-700 rounded-2xl px-4 py-2" href="{{ url_for('scanner_page') }}">
+      <span class="material-symbols-outlined text-2xl">center_focus_strong</span>
+    </a>
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('history_page') }}">
+      <span class="material-symbols-outlined text-2xl">history</span><span class="text-[9px] font-bold uppercase mt-1">History</span>
+    </a>
+  </div>
+</nav>
+
+<script type="text/javascript">
+function changeLanguage(lang) {
+    fetch('/api/set-language', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({language: lang})
+    }).then(() => window.location.reload());
+}
+
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'hi,mr,kn,te,ta,gu,bn,pa,or,ml',
+    autoDisplay: false
+  }, 'google_translate_element');
+  
+  // Auto-trigger translation if not English
+  const targetLang = "{{ session.get('user_language', 'English') }}";
+  const LANG_CODES = {'English':'en','Hindi':'hi','Marathi':'mr','Kannada':'kn','Telugu':'te','Tamil':'ta','Gujarati':'gu','Bengali':'bn','Punjabi':'pa','Odia':'or'};
+  const code = LANG_CODES[targetLang];
+  
+  if (code && code !== 'en') {
+    setTimeout(() => {
+        const select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = code;
+            select.dispatchEvent(new Event('change'));
+        }
+    }, 1000);
+  }
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<div id="google_translate_element" style="display:none"></div>
+
+</body>
+</html>

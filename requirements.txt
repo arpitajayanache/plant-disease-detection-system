@@ -1,0 +1,15 @@
+flask
+flask-cors
+pymongo
+python-dotenv
+torch
+torchvision
+opencv-python
+Pillow
+google-generativeai
+SpeechRecognition
+gTTS
+pydub
+numpy
+pandas
+gunicorn

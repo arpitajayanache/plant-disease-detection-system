@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Krishi AI - Leaf Scanner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={darkMode:"class",theme:{extend:{colors:{"primary":"#006c49","on-primary":"#ffffff","primary-container":"#10b981","on-primary-container":"#00422b","secondary-container":"#82f5c1","on-secondary-container":"#00714e","surface":"#faf9f8","on-surface":"#1a1c1c","surface-container-low":"#f4f3f2","surface-container-highest":"#e3e2e1","on-surface-variant":"#3c4a42","outline-variant":"#bbcabf","outline":"#6c7a71","background":"#faf9f8","on-background":"#1a1c1c","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a","tertiary-container":"#e68c5f","on-tertiary-container":"#642601"}}}}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .glass-card { background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.5); }
+  @keyframes scan-move { 0%,100%{top:0%} 50%{top:calc(100% - 2px)} }
+  .scan-line { position:absolute;left:0;right:0;height:2px;background:#10B981;box-shadow:0 0 12px 3px rgba(16,185,129,0.7);animation:scan-move 2.5s ease-in-out infinite;pointer-events:none;z-index:10; }
+  @keyframes bar { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
+  .wave-bar { animation:bar 1s ease-in-out infinite; transform-origin:bottom; }
+  .wave-bar:nth-child(2){animation-delay:.15s}
+  .wave-bar:nth-child(3){animation-delay:.3s}
+  .wave-bar:nth-child(4){animation-delay:.45s}
+  .wave-bar:nth-child(5){animation-delay:.6s}
+</style>
+</head>
+<body class="bg-background text-on-surface flex flex-col min-h-screen">
+
+<!-- Nav -->
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-stone-100">
+  <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8">
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 pb-0.5" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('history_page') }}">History</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      {% if user_name %}<span class="hidden md:block text-sm text-emerald-700 font-medium">👋 {{ user_name }}</span>{% endif %}
+      <a href="{{ url_for('logout') }}" class="hidden md:block text-xs text-stone-400 hover:text-red-500 transition-colors font-medium">Logout</a>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="flex-grow pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium {% if category=='error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left: Supported Crops -->
+    <aside class="lg:col-span-3 hidden lg:block sticky top-24">
+      <div class="glass-card rounded-2xl p-6 shadow-sm border border-stone-200/60">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-5 flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">list_alt</span> Supported Crops
+        </h3>
+        <ul class="space-y-2">
+          {% for crop in ['Apple','Bell Pepper','Cherry','Corn','Grape','Peach','Potato','Raspberry','Soybean','Squash','Strawberry','Tomato'] %}
+          <li class="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-emerald-50 transition-colors">
+            <span class="material-symbols-outlined text-primary text-lg">eco</span> {{ crop }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Centre: Upload + Results -->
+    <div class="lg:col-span-6 space-y-6">
+
+      <!-- UPLOAD FORM -->
+      <form id="scanForm" action="/api/predict" method="POST" enctype="multipart/form-data"
+            onsubmit="showScanning()">
+
+        <section id="dropZone"
+          class="bg-white border-2 border-dashed border-emerald-200 rounded-3xl p-8 text-center flex flex-col items-center shadow-sm transition-all hover:border-primary/50 hover:bg-emerald-50/10"
+          ondragover="event.preventDefault();this.classList.add('border-primary','bg-emerald-50/20')"
+          ondragleave="this.classList.remove('border-primary','bg-emerald-50/20')"
+          ondrop="handleDrop(event)">
+
+          <!-- Hidden file input -->
+          <input type="file" id="leaf_image" name="image" accept="image/*" class="hidden"
+                 onchange="previewImage(this)" required/>
+
+          <!-- Upload icon (hidden when image selected) -->
+          <div id="uploadIcon" class="flex flex-col items-center gap-4 mb-4">
+            <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary text-4xl">cloud_upload</span>
+            </div>
+            <h2 class="text-xl font-bold text-on-surface">Identify Plant Disease</h2>
+            <p class="text-sm text-on-surface-variant max-w-xs leading-relaxed">
+              Upload or drag a clear leaf photo. Supports JPG, PNG, WEBP.
+            </p>
+          </div>
+
+          <!-- IMAGE PREVIEW (shown after selection) -->
+          <div id="previewBox" class="hidden w-full mb-4">
+            <div class="relative rounded-2xl overflow-hidden border-2 border-emerald-300 shadow-lg max-h-64">
+              <img id="previewImg" src="" alt="Selected leaf"
+                   class="w-full object-cover max-h-64"/>
+              <div class="scan-line"></div>
+              <div class="absolute top-3 right-3 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded-lg uppercase tracking-wider">
+                Ready to Scan
+              </div>
+            </div>
+            <p id="previewName" class="text-xs text-on-surface-variant mt-2 text-center truncate"></p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex flex-wrap justify-center gap-3 w-full max-w-sm mb-5">
+            <button type="button"
+              onclick="document.getElementById('leaf_image').setAttribute('capture','environment');document.getElementById('leaf_image').click()"
+              class="flex-1 flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl text-sm font-semibold hover:opacity-95 transition-all shadow-lg">
+              <span class="material-symbols-outlined text-lg">photo_camera</span> Capture
+            </button>
+            <button type="button"
+              onclick="document.getElementById('leaf_image').removeAttribute('capture');document.getElementById('leaf_image').click()"
+              class="flex-1 flex items-center justify-center gap-2 bg-white text-on-surface border border-stone-200 px-6 py-3 rounded-2xl text-sm font-semibold hover:bg-stone-50 transition-all">
+              <span class="material-symbols-outlined text-lg">upload_file</span> Upload
+            </button>
+          </div>
+
+          <!-- LANGUAGE SELECTOR -->
+          <div class="w-full max-w-sm mb-4">
+            <label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-2">
+              Report Language
+            </label>
+            <select name="language" id="langSelect"
+              class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+              onchange="updateVoiceLang(this.value)">
+              <option value="English" {% if user_language == 'English' %}selected{% endif %}>🇬🇧 English</option>
+              <option value="Hindi" {% if user_language == 'Hindi' %}selected{% endif %}>🇮🇳 Hindi (हिन्दी)</option>
+              <option value="Marathi" {% if user_language == 'Marathi' %}selected{% endif %}>🇮🇳 Marathi (मराठी)</option>
+              <option value="Kannada" {% if user_language == 'Kannada' %}selected{% endif %}>🇮🇳 Kannada (ಕನ್ನಡ)</option>
+              <option value="Telugu" {% if user_language == 'Telugu' %}selected{% endif %}>🇮🇳 Telugu (తెలుగు)</option>
+              <option value="Tamil" {% if user_language == 'Tamil' %}selected{% endif %}>🇮🇳 Tamil (தமிழ்)</option>
+              <option value="Gujarati" {% if user_language == 'Gujarati' %}selected{% endif %}>🇮🇳 Gujarati (ગુજરાતી)</option>
+              <option value="Bengali" {% if user_language == 'Bengali' %}selected{% endif %}>🇮🇳 Bengali (বাংলা)</option>
+              <option value="Punjabi" {% if user_language == 'Punjabi' %}selected{% endif %}>🇮🇳 Punjabi (ਪੰਜਾਬੀ)</option>
+              <option value="Odia" {% if user_language == 'Odia' %}selected{% endif %}>🇮🇳 Odia (ଓଡ଼ିଆ)</option>
+              <option value="Malayalam" {% if user_language == 'Malayalam' %}selected{% endif %}>🇮🇳 Malayalam (മലയാളം)</option>
+            </select>
+          </div>
+
+          <!-- Analyse button (shown after image selected) -->
+          <button type="submit" id="analyseBtn"
+            class="hidden w-full max-w-sm bg-emerald-700 text-white py-4 rounded-2xl text-base font-bold hover:opacity-95 active:scale-[0.98] transition-all shadow-xl">
+            <span class="material-symbols-outlined align-middle mr-1 text-lg">biotech</span>
+            Analyse Leaf
+          </button>
+
+        </section>
+      </form>
+
+      <div class="bg-white border border-stone-200 rounded-3xl p-8 text-center shadow-sm">
+        <span class="material-symbols-outlined text-5xl text-emerald-100 block mb-3">biotech</span>
+        <h3 class="text-lg font-bold text-on-surface mb-1">Ready to Scan</h3>
+        <p class="text-sm text-on-surface-variant">
+          Select a leaf image above, choose your language, then click
+          <strong>Analyse Leaf</strong> to get your AI-powered disease report.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- Scanning Overlay -->
+<div id="scanningOverlay" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-xl items-center justify-center p-6">
+  <div class="bg-white p-10 rounded-3xl flex flex-col items-center shadow-2xl max-w-sm w-full text-center">
+    <div class="relative w-16 h-16 mb-6">
+      <div class="absolute inset-0 border-4 border-emerald-100 rounded-full"></div>
+      <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    <p class="text-xl font-bold text-on-surface mb-2">Analysing Leaf...</p>
+    <p class="text-sm text-on-surface-variant leading-relaxed">
+      CNN ensemble + Gemini AI are processing your image.<br>This usually takes 5–10 seconds.
+    </p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="w-full py-8 px-6 bg-stone-50 border-t border-stone-200 mt-auto">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="text-base font-bold text-emerald-900 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">potted_plant</span> Krishi AI
+    </div>
+    <div class="flex gap-8">
+      <a class="text-xs text-stone-600 hover:text-emerald-600" href="#">Privacy</a>
+      <a class="text-xs text-stone-600 hover:text-emerald-600" href="#">Terms</a>
+    </div>
+    <div class="text-xs text-stone-400">© 2026 Krishi AI. All rights reserved.</div>
+  </div>
+</footer>
+
+<!-- Mobile Bottom Nav -->
+<nav class="fixed bottom-0 w-full z-50 md:hidden bg-white/95 backdrop-blur-md border-t border-stone-100 shadow-lg">
+  <div class="flex justify-around items-center px-2 py-3">
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('signup_page') }}">
+      <span class="material-symbols-outlined text-2xl">home</span><span class="text-[9px] font-bold uppercase mt-1">Home</span>
+    </a>
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('how_it_works') }}">
+      <span class="material-symbols-outlined text-2xl">account_tree</span><span class="text-[9px] font-bold uppercase mt-1">Process</span>
+    </a>
+    <a class="flex flex-col items-center bg-emerald-50 text-emerald-700 rounded-2xl px-4 py-2" href="{{ url_for('scanner_page') }}">
+      <span class="material-symbols-outlined text-2xl">center_focus_strong</span>
+    </a>
+    <a class="flex flex-col items-center text-stone-400" href="{{ url_for('history_page') }}">
+      <span class="material-symbols-outlined text-2xl">history</span><span class="text-[9px] font-bold uppercase mt-1">History</span>
+    </a>
+  </div>
+</nav>
+
+<!-- JAVASCRIPT -->
+<script>
+const LANG_CODES = {
+  'English':'en-US','Hindi':'hi-IN','Marathi':'mr-IN','Kannada':'kn-IN',
+  'Telugu':'te-IN','Tamil':'ta-IN','Gujarati':'gu-IN','Bengali':'bn-IN',
+  'Punjabi':'pa-IN','Odia':'or-IN','Malayalam':'ml-IN'
+};
+
+function cleanLang(val) { return val.split('(')[0].trim(); }
+function getLangCode(val) { return LANG_CODES[cleanLang(val)] || 'en-US'; }
+
+let currentLang  = 'en-US';
+let recognition  = null;
+let isListening  = false;
+
+function updateVoiceLang(val) {
+  const clean = cleanLang(val);
+  currentLang = getLangCode(val);
+  document.getElementById('voiceLangLabel').textContent = clean;
+}
+
+function previewImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const file   = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewName').textContent = file.name;
+    document.getElementById('previewBox').classList.remove('hidden');
+    document.getElementById('uploadIcon').classList.add('hidden');
+    document.getElementById('analyseBtn').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('border-primary','bg-emerald-50/20');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    const inp = document.getElementById('leaf_image');
+    inp.files = dt.files;
+    previewImage(inp);
+  }
+}
+
+function showScanning() {
+  document.getElementById('scanningOverlay').classList.remove('hidden');
+  document.getElementById('scanningOverlay').classList.add('flex');
+}
+
+// Voice Assistant
+function toggleMic() {
+  if (isListening) { stopMic(); } else { startMic(); }
+}
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setInsight('❌ Browser does not support Speech Recognition.');
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = currentLang;
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('micIcon').textContent = 'mic_off';
+    document.getElementById('micBtn').style.backgroundColor = '#ef4444';
+    document.getElementById('waveform').style.opacity = '1';
+    setStatus('Listening');
+  };
+  recognition.onresult = e => {
+    const transcript = e.results[0][0].transcript;
+    setInsight('You said: "' + transcript + '"');
+    askGemini(transcript);
+  };
+  recognition.onerror = e => setInsight('❌ Error: ' + e.error);
+  recognition.onend = () => stopMic();
+  recognition.start();
+}
+
+function stopMic() {
+  isListening = false;
+  if (recognition) recognition.stop();
+  document.getElementById('micIcon').textContent = 'mic';
+  document.getElementById('micBtn').style.backgroundColor = '';
+  document.getElementById('waveform').style.opacity = '0.3';
+  setStatus('Ready');
+}
+
+// Voice Assistant Context
+let lastScanContext = { disease: null, cure: null };
+
+function askGemini(transcript) {
+  setInsight('⏳ Thinking...');
+  fetch('/api/voice/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      transcript: transcript, 
+      language: currentLang,
+      context: lastScanContext // Now sending the disease info to the AI!
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    setInsight(d.response);
+    speakText(d.response, currentLang);
+  });
+}
+
+// Update context when prediction completes
+function handleScanResult(data) {
+    lastScanContext.disease = data.disease;
+    lastScanContext.cure = data.cure;
+    // ... rest of result logic
+}
+
+function speakText(text, lang) {
+  if (!text) return;
+  fetch('/api/voice/speak', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, language: lang })
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+  });
+}
+
+function setInsight(text) { document.getElementById('insightText').textContent = text; }
+function setStatus(text)  { document.getElementById('vaStatus').querySelector('span').textContent = text; }
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign Up | Krishi AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+body { font-family: 'Inter', sans-serif; background: #faf9f8; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+.glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 20px 60px rgba(0,108,73,0.10); }
+.watermark::before { content:'eco'; font-family:'Material Symbols Outlined'; position:fixed; top:40%; left:50%; transform:translate(-50%,-50%); font-size:90vh; color:#10b981; opacity:0.04; filter:blur(12px); pointer-events:none; z-index:0; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col watermark">
+
+<!-- Nav -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 shadow-sm">
+  <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined text-emerald-600">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <div class="hidden md:flex gap-8">
+      <a class="text-sm font-bold text-emerald-700 border-b-2 border-emerald-600 pb-0.5" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('history_page') }}">History</a>
+    </div>
+    <a href="#login-section">
+      <button class="bg-emerald-700 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-emerald-800 transition-all shadow-md">Log In</button>
+    </a>
+  </div>
+</nav>
+
+<main class="flex-grow pt-28 pb-20">
+  <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-start">
+
+    <!-- Hero -->
+    <div class="space-y-6 order-2 lg:order-1 text-center lg:text-left pt-6">
+      <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider border border-emerald-100">
+        <span class="material-symbols-outlined text-base">verified</span> AI-POWERED DIAGNOSTICS
+      </div>
+      <h1 class="text-4xl lg:text-5xl font-bold text-stone-900 leading-tight">
+        AI Plant Disease Detector —<br>
+        <span class="text-emerald-700">Empowering Farmers</span> with Precision
+      </h1>
+      <p class="text-lg text-stone-600 max-w-lg leading-relaxed">
+        Join thousands of precision farmers using Krishi AI to detect, diagnose, and treat plant diseases in real-time.
+        <span class="block mt-3 text-emerald-700 font-medium italic">Smart Farming, Smarter Future</span>
+      </p>
+      <div class="hidden lg:block relative h-56 w-full rounded-3xl overflow-hidden shadow-2xl mt-8">
+        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSad0CuXQCFgeensFqd4Dzm5-9l_Hup9f5NzpH-86GsFaggj-dFUl9PyI6g8rpxiu3l4p6xkmQysHYaJxd5B8fDhD-n59i0zVBjw12yrO5-RvpomPFZUWPO0eJWWbERy4HWby5hw9QZcnIhbscyaYCSvgqVWHkt-2sHKTfRnwN7Mayttp2ixL7ubZ7wBeJnCvvLGbA4Q6EXyjCGuR2wMy0QIIFl_b4KlSql_ptWfdvuA78anpGYoHXtRUNZ9Z_kHUl9oQ5yBq_tq0" alt="crops"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+        <div class="absolute bottom-4 left-4 flex items-center gap-3 text-white">
+          <div class="p-2 bg-emerald-500 rounded-lg"><span class="material-symbols-outlined text-xl">analytics</span></div>
+          <div>
+            <p class="text-xs opacity-80 uppercase tracking-widest font-semibold">Industry Standard</p>
+            <p class="text-lg font-bold">98.4% Accuracy Rate</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forms -->
+    <div class="order-1 lg:order-2 flex justify-center">
+      <div class="w-full max-w-md glass p-8 rounded-3xl">
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-4 px-4 py-3 rounded-xl text-sm font-medium
+                {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200
+                {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Sign Up Form -->
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-stone-900 mb-1">Create your account</h2>
+          <p class="text-sm text-stone-500">Start your precision farming journey today.</p>
+        </div>
+
+        <form action="/signup" method="POST" class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-1.5">Full Name</label>
+            <input name="name" type="text" placeholder="e.g. Priya Patil" required
+              class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"/>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-1.5">Email Address</label>
+            <input name="email" type="email" placeholder="farmer@example.com" required
+              class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"/>
+          </div>
+          <div class="relative">
+            <label class="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-1.5">Password</label>
+            <input name="password" id="pw1" type="password" placeholder="Create a strong password" required
+              class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 pr-12 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"/>
+            <button type="button" onclick="var f=document.getElementById('pw1');f.type=f.type==='password'?'text':'password'"
+              class="absolute right-3 top-9 text-stone-400 hover:text-emerald-600 transition-colors">
+              <span class="material-symbols-outlined text-lg">visibility</span>
+            </button>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-1.5">Preferred Language</label>
+            <select name="language" required
+              class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all">
+              <option value="English">English</option>
+              <option value="Hindi">Hindi (हिन्दी)</option>
+              <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+              <option value="Marathi">Marathi (मराठी)</option>
+              <option value="Telugu">Telugu (తెలుగు)</option>
+              <option value="Tamil">Tamil (தமிழ்)</option>
+              <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+              <option value="Bengali">Bengali (বাংলা)</option>
+              <option value="Malayalam">Malayalam (മലയാളം)</option>
+              <option value="Punjabi">Punjabi (ਪੰਜਾਬੀ)</option>
+              <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-3 py-1">
+            <input type="checkbox" name="is_farmer" value="yes" checked
+              class="w-4 h-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-600/20"/>
+            <label class="text-sm text-stone-700 cursor-pointer">I am a Farmer / Agriculturist</label>
+          </div>
+          <button type="submit"
+            class="w-full bg-emerald-700 text-white py-3.5 rounded-xl font-semibold text-base hover:bg-emerald-800 transition-all shadow-lg active:scale-[0.98]">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-5">
+          <div class="flex-1 h-px bg-stone-200"></div>
+          <span id="login-section" class="text-xs text-stone-400 font-medium">Already have an account?</span>
+          <div class="flex-1 h-px bg-stone-200"></div>
+        </div>
+
+        <!-- Login Form -->
+        <form action="/login" method="POST" class="space-y-3">
+          <input name="email" type="email" placeholder="Email address" required
+            class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"/>
+          <div class="relative">
+            <input name="password" id="pw2" type="password" placeholder="Password" required
+              class="w-full bg-white/70 border border-stone-200 rounded-xl p-3.5 pr-12 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"/>
+            <button type="button" onclick="var f=document.getElementById('pw2');f.type=f.type==='password'?'text':'password'"
+              class="absolute right-3 top-3 text-stone-400 hover:text-emerald-600 transition-colors">
+              <span class="material-symbols-outlined text-lg">visibility</span>
+            </button>
+          </div>
+          <button type="submit"
+            class="w-full border-2 border-emerald-700 text-emerald-700 py-3.5 rounded-xl font-semibold hover:bg-emerald-700 hover:text-white transition-all active:scale-[0.98]">
+            Log In
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="w-full py-8 px-6 bg-stone-50 border-t border-stone-200">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
+    <div class="text-base font-bold text-emerald-900 flex items-center gap-2">
+      <span class="material-symbols-outlined text-emerald-600 text-base">potted_plant</span> Krishi AI
+    </div>
+    <p class="text-xs text-stone-400">© 2026 Krishi AI. Precision Farming for a Sustainable Future.</p>
+    <div class="flex gap-6">
+      <a class="text-xs font-semibold text-stone-500 hover:text-emerald-600 transition-colors" href="#">Privacy</a>
+      <a class="text-xs font-semibold text-stone-500 hover:text-emerald-600 transition-colors" href="#">Terms</a>
+      <a class="text-xs font-semibold text-stone-500 hover:text-emerald-600 transition-colors" href="#">Support</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Mobile Nav -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 bg-white/90 backdrop-blur-xl border-t border-stone-200 md:hidden z-50">
+  <a class="flex flex-col items-center text-emerald-700" href="{{ url_for('signup_page') }}"><span class="material-symbols-outlined text-2xl">home</span><span class="text-[9px] font-bold uppercase mt-1">Home</span></a>
+  <a class="flex flex-col items-center text-stone-400" href="{{ url_for('how_it_works') }}"><span class="material-symbols-outlined text-2xl">account_tree</span><span class="text-[9px] font-bold uppercase mt-1">Process</span></a>
+  <a class="flex flex-col items-center bg-emerald-500 text-white rounded-2xl px-4 py-2 -mt-4 shadow-lg" href="{{ url_for('scanner_page') }}"><span class="material-symbols-outlined text-2xl">center_focus_strong</span></a>
+  <a class="flex flex-col items-center text-stone-400" href="{{ url_for('history_page') }}"><span class="material-symbols-outlined text-2xl">history</span><span class="text-[9px] font-bold uppercase mt-1">History</span></a>
+</nav>
+
+</body>
+</html>

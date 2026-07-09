@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thank You | Krishi AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config={theme:{extend:{colors:{"primary":"#006c49","surface":"#faf9f8"}}}}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #faf9f8; }
+  .fade-in { animation: fadeIn 1s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.9); }
+</style>
+</head>
+<header class="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-stone-200 shadow-sm">
+  <nav class="grid grid-cols-3 items-center px-6 py-4 max-w-7xl mx-auto">
+    <a href="{{ url_for('signup_page') }}" class="flex flex-col">
+      <div class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">potted_plant</span> Krishi AI
+      </div>
+      <span class="text-[10px] font-medium text-stone-500 uppercase tracking-widest hidden md:block">Smart Farming, Smarter Future</span>
+    </a>
+    <div class="hidden md:flex gap-8 items-center justify-center">
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('signup_page') }}">Home</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('how_it_works') }}">How it Works</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('scanner_page') }}">Scanner</a>
+      <a class="text-sm font-semibold text-stone-600 hover:text-emerald-600 transition-colors" href="{{ url_for('history_page') }}">History</a>
+    </div>
+    <div class="flex justify-end items-center gap-3">
+      {% if user_name %}<span class="hidden md:block text-sm text-emerald-700 font-medium">👋 {{ user_name }}</span>{% endif %}
+      <a href="{{ url_for('logout') }}" class="hidden md:block text-xs text-stone-400 hover:text-red-500 transition-colors font-medium">Logout</a>
+    </div>
+  </nav>
+</header>
+
+<body class="flex flex-col min-h-screen items-center justify-center p-6 pt-20">
+
+  <div class="max-w-md w-full text-center fade-in">
+    <div class="mb-8 inline-flex items-center justify-center w-24 h-24 bg-emerald-100 text-primary rounded-full shadow-inner">
+      <span class="material-symbols-outlined text-5xl">task_alt</span>
+    </div>
+    
+    <h1 class="text-4xl font-extrabold text-stone-900 mb-4 tracking-tight">Diagnosis Complete!</h1>
+    <p class="text-lg text-stone-600 mb-10 leading-relaxed">
+      Thank you for using <span class="text-primary font-bold">Krishi AI</span>. Your plant's health is our priority. We hope the AI diagnosis helps your farm thrive!
+    </p>
+
+    <div class="glass rounded-3xl p-8 mb-8 shadow-xl">
+      <h3 class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-4">What's Next?</h3>
+      <ul class="text-left space-y-4">
+        <li class="flex gap-3">
+          <span class="material-symbols-outlined text-primary">potted_plant</span>
+          <span class="text-stone-700 text-sm">Follow the treatment steps strictly.</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="material-symbols-outlined text-primary">history</span>
+          <span class="text-stone-700 text-sm">Check your history anytime to track progress.</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="material-symbols-outlined text-primary">share</span>
+          <span class="text-stone-700 text-sm">Share this tool with fellow farmers.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <a href="/scanner" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">restart_alt</span> Scan Another Plant
+      </a>
+      <a href="/" class="text-stone-400 hover:text-stone-600 font-medium text-sm">Back to Home</a>
+    </div>
+
+    <p class="mt-12 text-stone-300 text-[10px] font-bold uppercase tracking-[0.2em]">Empowering Indian Agriculture</p>
+  </div>
+
+<script type="text/javascript">
+function changeLanguage(lang) {
+    fetch('/api/set-language', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({language: lang})
+    }).then(() => window.location.reload());
+}
+
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'hi,mr,kn,te,ta,gu,bn,pa,or,ml',
+    autoDisplay: false
+  }, 'google_translate_element');
+  
+  // Auto-trigger translation if not English
+  const targetLang = "{{ session.get('user_language', 'English') }}";
+  const LANG_CODES = {'English':'en','Hindi':'hi','Marathi':'mr','Kannada':'kn','Telugu':'te','Tamil':'ta','Gujarati':'gu','Bengali':'bn','Punjabi':'pa','Odia':'or'};
+  const code = LANG_CODES[targetLang];
+  
+  if (code && code !== 'en') {
+    setTimeout(() => {
+        const select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = code;
+            select.dispatchEvent(new Event('change'));
+        }
+    }, 1000);
+  }
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<div id="google_translate_element" style="display:none"></div>
+
+</body>
+</html>

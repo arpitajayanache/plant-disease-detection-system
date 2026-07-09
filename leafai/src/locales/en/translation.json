@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "how": "How It Works",
+    "scan": "Scanner",
+    "summary": "Summary",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "auth": {
+    "welcome": "Detect. Diagnose. Heal.",
+    "tagline": "AI-powered plant disease detection for farmers — fast, accurate, and multilingual.",
+    "login": "Login",
+    "signup": "Sign Up",
+    "create": "Create Account",
+    "name": "Full Name",
+    "email": "Email Address",
+    "pass": "Password",
+    "confirm": "Confirm Password",
+    "lang": "Preferred Language",
+    "processing": "Processing...",
+    "btn_login": "🌿 Login",
+    "btn_signup": "🌱 Create Account"
+  },
+  "how": {
+    "title": "How LeafAI Works",
+    "desc": "Simple steps to protect your crops with the power of AI.",
+    "step1_title": "Upload or Capture",
+    "step1_desc": "Upload a clear photo of the plant leaf from your device or use your camera.",
+    "step2_title": "AI Analysis",
+    "step2_desc": "Our CNN model scans the leaf and detects disease regions in real-time.",
+    "step3_title": "Get Cure & Guidance",
+    "step3_desc": "Receive AI-generated treatment steps with voice assistance support.",
+    "start": "Start Scanning →"
+  },
+  "scanner": {
+    "title": "🔬 Upload Leaf Image",
+    "prompt": "Drop your leaf image here or click to upload",
+    "remove": "✕ Remove Image",
+    "select_lang": "Select Cure Language",
+    "btn_scan": "🔍 Scan Now",
+    "btn_upload_first": "Upload an image first",
+    "results_title": "📊 Detection Results",
+    "results_placeholder": "Upload a leaf image and click Scan Now to see results.",
+    "confidence": "Detection Confidence",
+    "detected": "Detected",
+    "treatment": "💊 Recommended Treatment",
+    "prevention": "🛡️ Preventive Measures",
+    "view_summary": "View Summary →"
+  },
+  "summary": {
+    "title": "Scan Complete! 🌿",
+    "subtitle": "Your report has been saved to your history.",
+    "card_title": "🗒️ Scan Summary",
+    "btn_another": "🔍 Scan Another",
+    "btn_home": "🏠 Dashboard",
+    "status": "Status",
+    "saved": "Saved ✓"
+  },
+  "voice": {
+    "title": "Voice Assistant",
+    "desc": "I can help you navigate and read results.",
+    "ready": "Ready for commands...",
+    "listening": "I'm listening...",
+    "error": "Microphone error.",
+    "stop": "Stop Listening",
+    "start": "Start Listening",
+    "read_results": "Read Results",
+    "try": "Try:",
+    "cmd_scan": "Scan now",
+    "cmd_home": "Go to Home",
+    "cmd_read": "Read results"
+  },
+  "errors": {
+    "email": "Enter a valid email.",
+    "pass": "Password must be 6+ characters.",
+    "name": "Full name is required.",
+    "confirm": "Passwords do not match.",
+    "auth": "Authentication failed.",
+    "server": "Server unreachable. Is the backend running?",
+    "scan": "Failed to analyze image."
+  }
+}

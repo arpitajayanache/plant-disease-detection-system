@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "how": "Comment ça marche",
+    "scan": "Scanner",
+    "summary": "Résumé",
+    "login": "Connexion",
+    "signup": "S'inscrire"
+  },
+  "auth": {
+    "welcome": "Détecter. Diagnostiquer. Guérir.",
+    "tagline": "Détection des maladies des plantes par IA pour les agriculteurs — rapide, précise et multilingue.",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "create": "Créer un compte",
+    "name": "Nom complet",
+    "email": "Adresse e-mail",
+    "pass": "Mot de passe",
+    "confirm": "Confirmer le mot de passe",
+    "lang": "Langue préférée",
+    "processing": "Traitement en cours...",
+    "btn_login": "🌿 Connexion",
+    "btn_signup": "🌱 Créer un compte"
+  },
+  "how": {
+    "title": "Comment fonctionne LeafAI",
+    "desc": "Des étapes simples pour protéger vos cultures grâce à la puissance de l'IA.",
+    "step1_title": "Télécharger ou Capturer",
+    "step1_desc": "Téléchargez une photo claire de la feuille de la plante depuis votre appareil ou utilisez votre appareil photo.",
+    "step2_title": "Analyse par IA",
+    "step2_desc": "Notre modèle CNN scanne la feuille et détecte les zones malades en temps réel.",
+    "step3_title": "Obtenir Remède et Conseils",
+    "step3_desc": "Recevez des étapes de traitement générées par IA avec assistance vocale.",
+    "start": "Commencer le scan →"
+  },
+  "scanner": {
+    "title": "🔬 Télécharger l'image de la feuille",
+    "prompt": "Déposez l'image de votre feuille ici ou cliquez pour télécharger",
+    "remove": "✕ Supprimer l'image",
+    "select_lang": "Choisir la langue du remède",
+    "btn_scan": "🔍 Scanner maintenant",
+    "btn_upload_first": "Téléchargez d'abord une image",
+    "results_title": "📊 Résultats de la détection",
+    "results_placeholder": "Téléchargez une image de feuille et cliquez sur Scanner maintenant pour voir les résultats.",
+    "confidence": "Confiance de détection",
+    "detected": "Détecté",
+    "treatment": "💊 Traitement recommandé",
+    "prevention": "🛡️ Mesures préventives",
+    "view_summary": "Voir le résumé →"
+  },
+  "summary": {
+    "title": "Scan terminé ! 🌿",
+    "subtitle": "Votre rapport a été enregistré dans votre historique.",
+    "card_title": "🗒️ Résumé du scan",
+    "btn_another": "🔍 Scanner un autre",
+    "btn_home": "🏠 Tableau de bord",
+    "status": "Statut",
+    "saved": "Enregistré ✓"
+  },
+  "voice": {
+    "title": "Assistant Vocal",
+    "desc": "Je peux vous aider à naviguer et à lire les résultats.",
+    "ready": "Prêt pour les commandes...",
+    "listening": "J'écoute...",
+    "error": "Erreur de microphone.",
+    "stop": "Arrêter l'écoute",
+    "start": "Commencer l'écoute",
+    "read_results": "Lire les résultats",
+    "try": "Essayez :",
+    "cmd_scan": "Scanner maintenant",
+    "cmd_home": "Aller à l'accueil",
+    "cmd_read": "Lire les résultats"
+  },
+  "errors": {
+    "email": "Entrez un e-mail valide.",
+    "pass": "Le mot de passe doit comporter 6+ caractères.",
+    "name": "Le nom complet est requis.",
+    "confirm": "Les mots de passe ne correspondent pas.",
+    "auth": "Échec de l'authentification.",
+    "server": "Serveur inaccessible. Le backend est-il lancé ?",
+    "scan": "Échec de l'analyse de l'image."
+  }
+}
