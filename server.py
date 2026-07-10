@@ -40,14 +40,20 @@ def inject_user():
 # Using the model and label map in the current directory
 import gdown
 
-MODEL_PATH = "plant_disease_model.pth"
+MODEL_PATH = "plant_disease_model.onnx"
+MODEL_DATA_PATH = "plant_disease_model.onnx.data"
 LABEL_MAP_PATH = "label_map.json"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # Loaded from .env
 
 if not os.path.exists(MODEL_PATH):
-    print("Model not found locally, downloading from Google Drive...")
-    gdown.download(id="19kf03KNxPUDwUa0MVcL5UsN-8MglZTCC", output=MODEL_PATH, quiet=False)
-    print("Model downloaded successfully.")
+    print("Model file not found locally, downloading from Google Drive...")
+    gdown.download(id="1omapOrfmjuEkrevtRUoCqyzwZfE8qYbY", output=MODEL_PATH, quiet=False)
+    print("Model file downloaded successfully.")
+
+if not os.path.exists(MODEL_DATA_PATH):
+    print("Model weights not found locally, downloading from Google Drive...")
+    gdown.download(id="1fPSw7F17QLl0H_DL2x1zLMCxEn4ojP1p", output=MODEL_DATA_PATH, quiet=False)
+    print("Model weights downloaded successfully.")
 
 ai_service = KrishiAIService(MODEL_PATH, LABEL_MAP_PATH, GEMINI_API_KEY)
 users_col = db_service.db.users

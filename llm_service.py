@@ -1,9 +1,8 @@
 import os
 import io
 import json
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
+import onnxruntime as ort
+import numpy as np
 from PIL import Image
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning, module='google.generativeai')
@@ -22,7 +21,6 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 
 class KrishiAIService:
     def __init__(self, model_path, label_map_path, api_key=None):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         
         # Load Labels
@@ -31,12 +29,9 @@ class KrishiAIService:
         self.class_names = [self.label_map[str(i)] for i in range(len(self.label_map))]
         self.num_classes = len(self.class_names)
         
-        # Build & Load Model
-        self.model = self._build_model()
-        checkpoint = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.to(self.device)
-        self.model.eval()
+        # Load ONNX model
+        self.session = ort.InferenceSession(model_path)
+        logger.info(f"ONNX model loaded from {model_path}")
         
         # Initialize Gemini client using google.genai SDK
         if self.api_key:
@@ -52,39 +47,36 @@ class KrishiAIService:
         # Backward compatibility: expose client as llm_model attribute
         self.llm_model = self.client
 
-        self.transform = transforms.Compose([
-            transforms.Resize((IMG_SIZE, IMG_SIZE)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-        ])
-
-    def _build_model(self):
-        model = models.resnet50(weights=None)
-        in_features = model.fc.in_features
-        model.fc = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(in_features, self.num_classes)
-        )
-        return model
-
     def predict(self, image_bytes):
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        tensor = self.transform(img).unsqueeze(0).to(self.device)
-        
-        with torch.no_grad():
-            outputs = self.model(tensor)
-            probs = torch.softmax(outputs, dim=1)[0]
-            
-            # Get Top 3
-            top_probs, top_idxs = torch.topk(probs, 3)
-            
-            predictions = []
-            for i in range(3):
-                predictions.append({
-                    "class": self.class_names[top_idxs[i].item()],
-                    "confidence": top_probs[i].item()
-                })
-                
+
+        # Preprocess: resize, normalize, reorder to CHW, add batch dim
+        img_resized = img.resize((IMG_SIZE, IMG_SIZE))
+        arr = np.array(img_resized).astype(np.float32) / 255.0
+        mean = np.array(IMAGENET_MEAN)
+        std = np.array(IMAGENET_STD)
+        arr = (arr - mean) / std
+        arr = arr.transpose(2, 0, 1)
+        input_array = np.expand_dims(arr, 0).astype(np.float32)
+
+        # Run inference
+        input_name = self.session.get_inputs()[0].name
+        outputs = self.session.run(None, {input_name: input_array})[0][0]
+
+        # Softmax (ONNX gives raw logits, so apply softmax manually)
+        exp_scores = np.exp(outputs - np.max(outputs))
+        probs = exp_scores / exp_scores.sum()
+
+        # Get Top 3
+        top_idxs = np.argsort(probs)[::-1][:3]
+
+        predictions = []
+        for idx in top_idxs:
+            predictions.append({
+                "class": self.class_names[int(idx)],
+                "confidence": float(probs[idx])
+            })
+
         return predictions[0]["class"], predictions[0]["confidence"], predictions
 
     def get_cure_report(self, disease_name, language="English", image_bytes=None):
@@ -173,7 +165,7 @@ class KrishiAIService:
                     {
                         "name": "Copper fungicide",
                         "type": "Systemic",
-                        "dosage": "2 ml/L",
+                        "dosage": "2 ml/L",
                         "application_method": "Spray",
                         "safety_note": "Wear gloves",
                         "description": "A copper-based systemic fungicide that protects leaves from fungal infections and reduces disease spread. Apply as a foliar spray covering both sides of leaves. Repeat application every 7-14 days depending on weather."
@@ -221,7 +213,7 @@ class KrishiAIService:
                     {
                         "name": "Copper fungicide",
                         "type": "Systemic",
-                        "dosage": "2 ml/L",
+                        "dosage": "2 ml/L",
                         "application_method": "Spray",
                         "safety_note": "Wear gloves",
                         "description": "A copper-based systemic fungicide that protects leaves from fungal infections and reduces disease spread. Apply as a foliar spray covering both sides of leaves. Repeat application every 7-14 days depending on weather."
