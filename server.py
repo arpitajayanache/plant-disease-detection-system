@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
 from gtts import gTTS
 import io
+from PIL import Image
 
 # Load .env variables
 from dotenv import load_dotenv
@@ -184,11 +185,21 @@ def predict():
     
     try:
         image_bytes = file.read()
-        
+
+        # Downscale large images immediately to reduce memory usage
+        # (phone photos can be 10-15MB / 12MP+, which is expensive to hold
+        # in memory multiple times during validation + inference + LLM call)
+        try:
+            _resized_img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            _resized_img.thumbnail((800, 800))
+            _buf = io.BytesIO()
+            _resized_img.save(_buf, format='JPEG', quality=85)
+            image_bytes = _buf.getvalue()
+        except Exception as e:
+            logger.warning(f"Image resize failed, using original: {e}")
+
         # Quick leaf validation: check if image has dominant green channel
         try:
-            from PIL import Image
-            import io
             img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
             # Compute average green proportion
             r, g, b = img.split()
