@@ -9,6 +9,5 @@ SpeechRecognition
 gTTS
 pydub
 numpy
-pandas
 gunicorn
 gdown
